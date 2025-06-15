@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Notes with AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f);
+            color: #fff;
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .app-container {
+            max-width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: #FFD700;
+            font-size: 24px;
+        }
+        
+        .logo h1 {
+            font-size: 1.4rem;
+            background: linear-gradient(to right, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Notes List */
+        .notes-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+        
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        
+        .note-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .note-card.active {
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .note-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .note-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #FFD700;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .note-preview {
+            flex-grow: 1;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .note-date {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 8px;
+            text-align: right;
+        }
+        
+        /* Note Editor - Full Screen */
+        .note-editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            transform: translateY(100%);
+            transition: transform 0.4s ease-in-out;
+        }
+        
+        .note-editor-container.active {
+            transform: translateY(0);
+        }
+        
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        #note-title-input {
+            background: transparent;
+            border: none;
+            color: #FFD700;
+            font-size: 1.8rem;
+            font-weight: bold;
+            width: 100%;
+            padding: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 15px;
+        }
+        
+        #note-title-input:focus {
+            outline: none;
+            border-bottom: 2px solid #FFD700;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .editor-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            gap: 8px;
+        }
+        
+        .editor-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .save-btn {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+        }
+        
+        .delete-btn {
+            background: linear-gradient(135deg, #f44336, #b71c1c);
+        }
+        
+        #note-content {
+            width: 100%;
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            padding: 15px;
+            resize: none;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #note-content:focus {
+            outline: none;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+        }
+        
+        .ai-toggle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2196F3, #0D47A1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s;
+            border: 2px solid white;
+        }
+        
+        .ai-toggle:hover {
+            transform: scale(1.05);
+        }
+        
+        .ai-chat-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s;
+            z-index: 201;
+        }
+        
+        .ai-chat-container.active {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #2196F3, #0D47A1);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f9f9f9;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            animation: fadeIn 0.3s;
+        }
+        
+        .user-message {
+            background: #e3f2fd;
+            color: #333;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .ai-message {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #e0e0e0;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            color: #2196F3;
+            font-weight: 600;
+        }
+        
+        .chat-input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #chat-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        #send-chat {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2196F3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Empty state */
+        .empty-notes {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .empty-notes i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 300;
+            animation: fadeInOut 3s forwards;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Mobile optimization */
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row;
+                height: 100vh;
+            }
+            
+            .notes-list-container {
+                width: 300px;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .note-editor-container {
+                position: static;
+                transform: none;
+                height: auto;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 15px;
+                border-top: none;
+                flex: 1;
+            }
+            
+            .note-editor-container.active {
+                transform: none;
+            }
+            
+            .back-btn {
+                display: none;
+            }
+            
+            .notes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-notes-medical"></i>
+                <h1>Mobile Notes AI</h1>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" id="new-note-btn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Notes List -->
+        <div class="notes-list-container" id="notes-list-container">
+            <div class="notes-grid" id="notes-grid">
+                <div class="empty-notes">
+                    <i class="fas fa-sticky-note"></i>
+                    <p>No notes yet. Create your first note!</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Note Editor - Full Screen -->
+        <div class="note-editor-container" id="note-editor">
+            <button class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Notes
+            </button>
+            
+            <input type="text" id="note-title-input" placeholder="Note Title">
+            
+            <div class="editor-actions">
+                <button class="editor-btn save-btn" id="save-note-btn">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <button class="editor-btn delete-btn" id="delete-note-btn">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+            
+            <textarea id="note-content" placeholder="Start typing your note here..."></textarea>
+        </div>
+    </div>
+    
+    <!-- AI Assistant -->
+    <div class="ai-assistant">
+        <div class="ai-toggle" id="ai-toggle">
+            <i class="fas fa-dove"></i>
+        </div>
+        <div class="ai-chat-container" id="ai-chat">
+            <div class="chat-header">
+                <h3>AI Assistant</h3>
+                <button class="close-chat" id="close-chat">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="message ai-message">
+                    <div class="ai-header">
+                        <i class="fas fa-robot"></i>
+                        AI Assistant
+                    </div>
+                    <p>Hello! I'm your AI assistant. How can I help with your notes today?</p>
+                    <p>You can ask me to:</p>
+                    <ul>
+                        <li>Summarize your notes</li>
+                        <li>Generate ideas</li>
+                        <li>Improve writing</li>
+                        <li>Answer questions</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button id="send-chat">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const newNoteBtn = document.getElementById('new-note-btn');
+        const saveNoteBtn = document.getElementById('save-note-btn');
+        const deleteNoteBtn = document.getElementById('delete-note-btn');
+        const notesGrid = document.getElementById('notes-grid');
+        const noteTitleInput = document.getElementById('note-title-input');
+        const noteContent = document.getElementById('note-content');
+        const aiToggle = document.getElementById('ai-toggle');
+        const aiChat = document.getElementById('ai-chat');
+        const closeChat = document.getElementById('close-chat');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChat = document.getElementById('send-chat');
+        const backBtn = document.getElementById('back-btn');
+        const noteEditor = document.getElementById('note-editor');
+        const notesListContainer = document.getElementById('notes-list-container');
+        
+        // Notes data
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let currentNoteId = null;
+        
+        // Initialize the app
+        function init() {
+            renderNotes();
+            setupEventListeners();
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            newNoteBtn.addEventListener('click', createNewNote);
+            saveNoteBtn.addEventListener('click', saveCurrentNote);
+            deleteNoteBtn.addEventListener('click', deleteCurrentNote);
+            aiToggle.addEventListener('click', toggleAiChat);
+            closeChat.addEventListener('click', toggleAiChat);
+            sendChat.addEventListener('click', sendChatMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendChatMessage();
+            });
+            backBtn.addEventListener('click', () => {
+                noteEditor.classList.remove('active');
+                notesListContainer.style.display = 'block';
+            });
+        }
+        
+        // Render notes list
+        function renderNotes() {
+            if (notes.length === 0) {
+                notesGrid.innerHTML = `
+                    <div class="empty-notes">
+                        <i class="fas fa-sticky-note"></i>
+                        <p>No notes yet. Create your first note!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            notesGrid.innerHTML = notes.map(note => `
+                <div class="note-card" data-id="${note.id}">
+                    <div class="note-title">${note.title || 'Untitled Note'}</div>
+                    <div class="note-preview">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</div>
+                    <div class="note-date">${formatDate(note.date)}</div>
+                </div>
+            `).join('');
+            
+            // Add click event to note cards
+            document.querySelectorAll('.note-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const noteId = card.dataset.id;
+                    loadNote(noteId);
+                    // On mobile, show editor in full screen
+                    if (window.innerWidth < 768) {
+                        noteEditor.classList.add('active');
+                        notesListContainer.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        // Create a new note
+        function createNewNote() {
+            currentNoteId = Date.now();
+            noteTitleInput.value = '';
+            noteContent.value = '';
+            
+            // Add to notes array
+            notes.unshift({
+                id: currentNoteId,
+                title: '',
+                content: '',
+                date: new Date().toISOString()
+            });
+            
+            renderNotes();
+            showNotification('New note created!');
+            
+            // Show editor
+            if (window.innerWidth < 768) {
+                noteEditor.classList.add('active');
+                notesListContainer.style.display = 'none';
+            }
+            
+            // Focus on title input
+            setTimeout(() => {
+                noteTitleInput.focus();
+            }, 300);
+        }
+        
+        // Load a note into the editor
+        function loadNote(noteId) {
+            currentNoteId = parseInt(noteId);
+            const note = notes.find(n => n.id === currentNoteId);
+            
+            if (note) {
+                noteTitleInput.value = note.title;
+                noteContent.value = note.content;
+            }
+            
+            renderNotes();
+        }
+        
+        // Save current note
+        function saveCurrentNote() {
+            if (!currentNoteId) return;
+            
+            const noteIndex = notes.findIndex(n => n.id === currentNoteId);
+            if (noteIndex !== -1) {
+                notes[noteIndex].title = noteTitleInput.value;
+                notes[noteIndex].content = noteContent.value;
+                notes[noteIndex].date = new Date().toISOString();
+                
+                localStorage.setItem('notes', JSON.stringify(notes));
+                renderNotes();
+                showNotification('Note saved successfully!');
+            }
+        }
+        
+        // Delete current note
+        function deleteCurrentNote() {
+            if (!currentNoteId) return;
+            
+            if (confirm('Are you sure you want to delete this note?')) {
+                notes = notes.filter(n => n.id !== currentNoteId);
+                localStorage.setItem('notes', JSON.stringify(notes));
+                
+                if (notes.length > 0) {
+                    loadNote(notes[0].id);
+                } else {
+                    currentNoteId = null;
+                    noteTitleInput.value = '';
+                    noteContent.value = '';
+                }
+                
+                renderNotes();
+                showNotification('Note deleted!');
+            }
+        }
+        
+        // Toggle AI chat
+        function toggleAiChat() {
+            aiChat.classList.toggle('active');
+        }
+        
+        // Send chat message
+        function sendChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Simulate AI response after delay
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = generateAIResponse(message);
+                addChatMessage(response, 'ai');
+            }, 1000);
+        }
+        
+        // Add message to chat
+        function addChatMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+            
+            if (sender === 'ai') {
+                messageDiv.innerHTML = `
+                    <div class="ai-header">
+                        <i class="fas fa-robot"></i>
+                        AI Assistant
+                    </div>
+                    <p>${text}</p>
+                `;
+            } else {
+                messageDiv.innerHTML = `<p>${text}</p>`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.classList.add('message', 'ai-message');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="ai-header">
+                    <i class="fas fa-robot"></i>
+                    AI Assistant
+                </div>
+                <p><i class="fas fa-circle-notch fa-spin"></i> Thinking...</p>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator() {
+            const typing = document.getElementById('typing-indicator');
+            if (typing) typing.remove();
+        }
+        
+        // Generate AI response
+        function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Simple response patterns
+            if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                return "Hello! How can I assist you with your notes today? 😊";
+            }
+            
+            if (lowerMessage.includes('thank')) {
+                return "You're welcome! Is there anything else I can help with?";
+            }
+            
+            if (lowerMessage.includes('help')) {
+                return "I can help you with your notes! I can summarize content, generate ideas, improve writing, or answer questions. Try asking: 'Can you summarize my notes?' or 'Give me ideas for a project'.";
+            }
+            
+            if (lowerMessage.includes('note') && notes.length > 0) {
+                const note = notes.find(n => n.id === currentNoteId);
+                if (note) {
+                    return `Regarding your current note <strong>"${note.title || 'Untitled'}"</strong>: ${note.content.substring(0, 100)}...`;
+                }
+                return "I see you have notes! How can I help you with them?";
+            }
+            
+            if (lowerMessage.includes('weather')) {
+                return "I'm an AI for notes, but I can tell you that the weather in your notes is looking creative today! ☀️";
+            }
+            
+            if (lowerMessage.includes('joke')) {
+                return "Why did the note go to therapy? Because it had too many unresolved issues! 😄";
+            }
+            
+            // Default responses
+            const responses = [
+                "That's interesting! How can I help you organize or expand on that idea?",
+                "I'd be happy to help with your notes. Could you tell me more about what you're working on?",
+                "I recommend creating a note about that to capture your thoughts!",
+                "I can help you generate ideas based on your notes. Would you like me to do that?",
+                "That's a great point! Would you like me to create a note about it?"
+            ];
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+        
+        // Show notification
+        function showNotification(message) {
+            // Remove existing notification if any
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) existingNotification.remove();
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Initialize the app
+        window.onload = init;
+    </script>
+</body>
+</html>
