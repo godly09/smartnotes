@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Notes with AI</title>
+    <title>SmartNotes - AI-Powered Notes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -18,6 +18,7 @@
             color: #fff;
             min-height: 100vh;
             padding: 0;
+            overflow-x: hidden;
         }
         
         .app-container {
@@ -45,19 +46,21 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
         .logo i {
             color: #FFD700;
-            font-size: 24px;
+            font-size: 28px;
         }
         
         .logo h1 {
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             background: linear-gradient(to right, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         
         .header-actions {
@@ -88,46 +91,73 @@
         .notes-list-container {
             flex: 1;
             overflow-y: auto;
-            padding: 15px;
+            padding: 20px 15px;
             background: rgba(0, 0, 0, 0.1);
             display: block;
         }
         
+        .app-title {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .app-title h2 {
+            font-size: 1.4rem;
+            color: #FFD700;
+            font-weight: 500;
+        }
+        
+        .app-title p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+        
         .notes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 18px;
         }
         
         .note-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.15);
-            min-height: 150px;
+            min-height: 160px;
             display: flex;
             flex-direction: column;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
         }
         
-        .note-card.active {
-            border: 2px solid #FFD700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        .note-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
         }
         
         .note-card:hover {
             transform: translateY(-5px);
             background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
         
         .note-title {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 600;
             color: #FFD700;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -136,17 +166,18 @@
         .note-preview {
             flex-grow: 1;
             color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
+            line-height: 1.5;
         }
         
         .note-date {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.6);
-            margin-top: 8px;
+            margin-top: 12px;
             text-align: right;
         }
         
@@ -157,11 +188,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(10, 10, 30, 0.95);
             z-index: 200;
             display: flex;
             flex-direction: column;
-            padding: 15px;
+            padding: 20px 15px;
             transform: translateY(100%);
             transition: transform 0.4s ease-in-out;
         }
@@ -174,37 +205,38 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         .back-btn {
             background: rgba(255, 255, 255, 0.1);
             border: none;
             color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 10px 18px;
+            border-radius: 25px;
             font-size: 1rem;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             transition: all 0.3s;
         }
         
         .back-btn:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-5px);
         }
         
         #note-title-input {
             background: transparent;
             border: none;
             color: #FFD700;
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: bold;
             width: 100%;
-            padding: 10px;
+            padding: 10px 5px;
             border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
         #note-title-input:focus {
@@ -214,13 +246,13 @@
         
         .editor-actions {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 20px;
         }
         
         .editor-btn {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             border-radius: 15px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
@@ -228,88 +260,100 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.05rem;
             cursor: pointer;
             transition: all 0.3s;
-            gap: 8px;
+            gap: 10px;
         }
         
         .editor-btn:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
         }
         
         .save-btn {
             background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         
         .delete-btn {
             background: linear-gradient(135deg, #f44336, #b71c1c);
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
         }
         
         #note-content {
             width: 100%;
             flex: 1;
-            background: transparent;
+            background: rgba(0, 0, 0, 0.2);
             border: none;
             color: white;
             font-size: 1.2rem;
-            line-height: 1.6;
-            padding: 15px;
+            line-height: 1.7;
+            padding: 20px;
             resize: none;
-            border-radius: 10px;
+            border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         #note-content:focus {
             outline: none;
             border: 1px solid rgba(255, 215, 0, 0.3);
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.25);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
         }
         
         /* AI Assistant */
         .ai-assistant {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 25px;
+            right: 25px;
             z-index: 200;
         }
         
         .ai-toggle {
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             border-radius: 50%;
             background: linear-gradient(135deg, #2196F3, #0D47A1);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             transition: all 0.3s;
             border: 2px solid white;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
         }
         
         .ai-toggle:hover {
-            transform: scale(1.05);
+            transform: scale(1.08);
+            animation: none;
         }
         
         .ai-chat-container {
             position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 300px;
-            height: 400px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            bottom: 100px;
+            right: 25px;
+            width: 320px;
+            height: 420px;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 22px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             transform: translateY(20px);
             opacity: 0;
             pointer-events: none;
-            transition: all 0.3s;
+            transition: all 0.4s;
             z-index: 201;
         }
         
@@ -322,39 +366,58 @@
         .chat-header {
             background: linear-gradient(135deg, #2196F3, #0D47A1);
             color: white;
-            padding: 15px;
+            padding: 18px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        
+        .chat-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
         }
         
         .close-chat {
             background: none;
             border: none;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .close-chat:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .chat-messages {
             flex: 1;
-            padding: 15px;
+            padding: 18px;
             overflow-y: auto;
             background: #f9f9f9;
         }
         
         .message {
-            max-width: 80%;
-            padding: 10px 15px;
+            max-width: 85%;
+            padding: 12px 16px;
             border-radius: 18px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
+            margin-bottom: 14px;
+            font-size: 0.95rem;
             animation: fadeIn 0.3s;
+            line-height: 1.5;
         }
         
         .user-message {
             background: #e3f2fd;
-            color: #333;
+            color: #222;
             margin-left: auto;
             border-bottom-right-radius: 5px;
         }
@@ -371,9 +434,32 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             color: #2196F3;
             font-weight: 600;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .action-btn {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #bbdefb;
+            transform: translateY(-2px);
         }
         
         .chat-input-container {
@@ -381,20 +467,20 @@
             background: white;
             border-top: 1px solid #eee;
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
         
         #chat-input {
             flex: 1;
-            padding: 10px 15px;
+            padding: 12px 18px;
             border: 1px solid #ddd;
-            border-radius: 20px;
-            font-size: 0.9rem;
+            border-radius: 25px;
+            font-size: 1rem;
         }
         
         #send-chat {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: #2196F3;
             color: white;
@@ -403,33 +489,51 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        #send-chat:hover {
+            background: #0b7dda;
+            transform: scale(1.05);
         }
         
         /* Empty state */
         .empty-notes {
             text-align: center;
-            padding: 40px 20px;
+            padding: 50px 20px;
             color: rgba(255, 255, 255, 0.5);
         }
         
         .empty-notes i {
-            font-size: 3rem;
-            margin-bottom: 15px;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .empty-notes h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: #FFD700;
         }
         
         /* Notification */
         .notification {
             position: fixed;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
             background: #4CAF50;
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 12px 25px;
+            border-radius: 25px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
             z-index: 300;
             animation: fadeInOut 3s forwards;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         @keyframes fadeInOut {
@@ -452,7 +556,7 @@
             }
             
             .notes-list-container {
-                width: 300px;
+                width: 320px;
                 border-right: 1px solid rgba(255, 255, 255, 0.1);
             }
             
@@ -460,8 +564,8 @@
                 position: static;
                 transform: none;
                 height: auto;
-                background: rgba(0, 0, 0, 0.2);
-                padding: 15px;
+                background: rgba(10, 10, 30, 0.95);
+                padding: 20px;
                 border-top: none;
                 flex: 1;
             }
@@ -485,8 +589,8 @@
         <!-- Header -->
         <div class="header">
             <div class="logo">
-                <i class="fas fa-notes-medical"></i>
-                <h1>Mobile Notes AI</h1>
+                <i class="fas fa-brain"></i>
+                <h1>SMARTNOTES</h1>
             </div>
             <div class="header-actions">
                 <button class="header-btn" id="new-note-btn">
@@ -497,19 +601,27 @@
         
         <!-- Notes List -->
         <div class="notes-list-container" id="notes-list-container">
+            <div class="app-title">
+                <h2>AI-Powered Note Taking</h2>
+                <p>Your ideas, enhanced with artificial intelligence</p>
+            </div>
+            
             <div class="notes-grid" id="notes-grid">
                 <div class="empty-notes">
                     <i class="fas fa-sticky-note"></i>
-                    <p>No notes yet. Create your first note!</p>
+                    <h3>No Notes Yet</h3>
+                    <p>Create your first note to get started</p>
                 </div>
             </div>
         </div>
         
         <!-- Note Editor - Full Screen -->
         <div class="note-editor-container" id="note-editor">
-            <button class="back-btn" id="back-btn">
-                <i class="fas fa-arrow-left"></i> Back to Notes
-            </button>
+            <div class="editor-header">
+                <button class="back-btn" id="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Notes
+                </button>
+            </div>
             
             <input type="text" id="note-title-input" placeholder="Note Title">
             
@@ -533,7 +645,7 @@
         </div>
         <div class="ai-chat-container" id="ai-chat">
             <div class="chat-header">
-                <h3>AI Assistant</h3>
+                <h3><i class="fas fa-robot"></i> AI Assistant</h3>
                 <button class="close-chat" id="close-chat">
                     <i class="fas fa-times"></i>
                 </button>
@@ -541,21 +653,21 @@
             <div class="chat-messages" id="chat-messages">
                 <div class="message ai-message">
                     <div class="ai-header">
-                        <i class="fas fa-robot"></i>
-                        AI Assistant
+                        <i class="fas fa-dove"></i>
+                        SMARTNOTES Assistant
                     </div>
                     <p>Hello! I'm your AI assistant. How can I help with your notes today?</p>
                     <p>You can ask me to:</p>
                     <ul>
-                        <li>Summarize your notes</li>
-                        <li>Generate ideas</li>
-                        <li>Improve writing</li>
-                        <li>Answer questions</li>
+                        <li>Explain concepts related to your notes</li>
+                        <li>Help brainstorm ideas</li>
+                        <li>Answer questions about your content</li>
+                        <li>Provide writing suggestions</li>
                     </ul>
                 </div>
             </div>
             <div class="chat-input-container">
-                <input type="text" id="chat-input" placeholder="Type your message...">
+                <input type="text" id="chat-input" placeholder="Ask something about your notes...">
                 <button id="send-chat">
                     <i class="fas fa-paper-plane"></i>
                 </button>
@@ -582,8 +694,9 @@
         const notesListContainer = document.getElementById('notes-list-container');
         
         // Notes data
-        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+        let notes = JSON.parse(localStorage.getItem('smartnotes')) || [];
         let currentNoteId = null;
+        let noteContextActive = false;
         
         // Initialize the app
         function init() {
@@ -614,7 +727,8 @@
                 notesGrid.innerHTML = `
                     <div class="empty-notes">
                         <i class="fas fa-sticky-note"></i>
-                        <p>No notes yet. Create your first note!</p>
+                        <h3>No Notes Yet</h3>
+                        <p>Create your first note to get started</p>
                     </div>
                 `;
                 return;
@@ -623,7 +737,7 @@
             notesGrid.innerHTML = notes.map(note => `
                 <div class="note-card" data-id="${note.id}">
                     <div class="note-title">${note.title || 'Untitled Note'}</div>
-                    <div class="note-preview">${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}</div>
+                    <div class="note-preview">${note.content.substring(0, 120)}${note.content.length > 120 ? '...' : ''}</div>
                     <div class="note-date">${formatDate(note.date)}</div>
                 </div>
             `).join('');
@@ -645,7 +759,12 @@
         // Format date
         function formatDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
         
         // Create a new note
@@ -700,7 +819,7 @@
                 notes[noteIndex].content = noteContent.value;
                 notes[noteIndex].date = new Date().toISOString();
                 
-                localStorage.setItem('notes', JSON.stringify(notes));
+                localStorage.setItem('smartnotes', JSON.stringify(notes));
                 renderNotes();
                 showNotification('Note saved successfully!');
             }
@@ -712,7 +831,7 @@
             
             if (confirm('Are you sure you want to delete this note?')) {
                 notes = notes.filter(n => n.id !== currentNoteId);
-                localStorage.setItem('notes', JSON.stringify(notes));
+                localStorage.setItem('smartnotes', JSON.stringify(notes));
                 
                 if (notes.length > 0) {
                     loadNote(notes[0].id);
@@ -724,13 +843,88 @@
                 
                 renderNotes();
                 showNotification('Note deleted!');
+                
+                // If on mobile, go back to notes list
+                if (window.innerWidth < 768) {
+                    noteEditor.classList.remove('active');
+                    notesListContainer.style.display = 'block';
+                }
             }
         }
         
         // Toggle AI chat
         function toggleAiChat() {
             aiChat.classList.toggle('active');
+            
+            // If opening chat with an active note, provide context-aware assistance
+            if (aiChat.classList.contains('active') && currentNoteId) {
+                const note = notes.find(n => n.id === currentNoteId);
+                if (note && note.content.trim() !== '') {
+                    setTimeout(() => {
+                        provideNoteContextAssistance(note);
+                    }, 300);
+                }
+            }
         }
+        
+        // Provide context-aware assistance for the current note
+        function provideNoteContextAssistance(note) {
+            noteContextActive = true;
+            
+            const assistanceMessage = `
+                <div class="ai-header">
+                    <i class="fas fa-dove"></i>
+                    SMARTNOTES Assistant
+                </div>
+                <p>I see you're working on: <strong>${note.title || 'Untitled Note'}</strong></p>
+                <p>How can I help with this note?</p>
+                
+                <div class="action-buttons">
+                    <div class="action-btn" onclick="handleAIAction('summarize')">Summarize</div>
+                    <div class="action-btn" onclick="handleAIAction('improve')">Improve Writing</div>
+                    <div class="action-btn" onclick="handleAIAction('expand')">Expand Ideas</div>
+                    <div class="action-btn" onclick="handleAIAction('explain')">Explain Concepts</div>
+                </div>
+            `;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'ai-message');
+            messageDiv.innerHTML = assistanceMessage;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Handle AI action from context buttons
+        window.handleAIAction = function(action) {
+            if (!currentNoteId) return;
+            
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) return;
+            
+            // Remove any existing typing indicators
+            removeTypingIndicator();
+            
+            // Add user action message
+            const actionText = {
+                'summarize': 'Summarize this note',
+                'improve': 'Improve the writing',
+                'expand': 'Expand on these ideas',
+                'explain': 'Explain related concepts'
+            }[action];
+            
+            addChatMessage(actionText, 'user');
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = generateAIResponse(action, note);
+                addChatMessage(response, 'ai');
+            }, 1500);
+        };
         
         // Send chat message
         function sendChatMessage() {
@@ -761,8 +955,8 @@
             if (sender === 'ai') {
                 messageDiv.innerHTML = `
                     <div class="ai-header">
-                        <i class="fas fa-robot"></i>
-                        AI Assistant
+                        <i class="fas fa-dove"></i>
+                        SMARTNOTES Assistant
                     </div>
                     <p>${text}</p>
                 `;
@@ -781,8 +975,8 @@
             typingDiv.id = 'typing-indicator';
             typingDiv.innerHTML = `
                 <div class="ai-header">
-                    <i class="fas fa-robot"></i>
-                    AI Assistant
+                    <i class="fas fa-dove"></i>
+                    SMARTNOTES Assistant
                 </div>
                 <p><i class="fas fa-circle-notch fa-spin"></i> Thinking...</p>
             `;
@@ -798,8 +992,28 @@
         }
         
         // Generate AI response
-        function generateAIResponse(message) {
-            const lowerMessage = message.toLowerCase();
+        function generateAIResponse(input, note) {
+            // If we have a specific action
+            if (typeof input === 'string' && note) {
+                const noteContent = note.content;
+                const title = note.title || 'Untitled Note';
+                
+                switch(input) {
+                    case 'summarize':
+                        return `Summary of <strong>${title}</strong>:\n\n${noteContent.substring(0, 100)}${noteContent.length > 100 ? '...' : ''}\n\n[Full summary would appear here]`;
+                    case 'improve':
+                        return `Improved version of <strong>${title}</strong>:\n\n${noteContent}\n\n[Enhanced with better vocabulary and structure]`;
+                    case 'expand':
+                        return `Expanded ideas for <strong>${title}</strong>:\n\n1. First related idea\n2. Second related concept\n3. Potential application\n4. Further research direction`;
+                    case 'explain':
+                        return `Key concepts in <strong>${title}</strong>:\n\n- Concept 1: Explanation\n- Concept 2: Detailed description\n- Concept 3: How it relates to your note`;
+                    default:
+                        return `I've processed your request for: <strong>${title}</strong>`;
+                }
+            }
+            
+            // Handle regular chat messages
+            const lowerMessage = input.toLowerCase();
             
             // Simple response patterns
             if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
@@ -811,13 +1025,13 @@
             }
             
             if (lowerMessage.includes('help')) {
-                return "I can help you with your notes! I can summarize content, generate ideas, improve writing, or answer questions. Try asking: 'Can you summarize my notes?' or 'Give me ideas for a project'.";
+                return "I can help you with your notes! I can explain concepts, help brainstorm ideas, answer questions, or provide writing suggestions. Try asking: 'Can you explain machine learning?' or 'Give me ideas for a project'.";
             }
             
             if (lowerMessage.includes('note') && notes.length > 0) {
                 const note = notes.find(n => n.id === currentNoteId);
                 if (note) {
-                    return `Regarding your current note <strong>"${note.title || 'Untitled'}"</strong>: ${note.content.substring(0, 100)}...`;
+                    return `Regarding your current note <strong>"${note.title || 'Untitled'}"</strong>: ${note.content.substring(0, 120)}...`;
                 }
                 return "I see you have notes! How can I help you with them?";
             }
@@ -832,10 +1046,10 @@
             
             // Default responses
             const responses = [
-                "That's interesting! How can I help you organize or expand on that idea?",
+                "That's an interesting topic! How can I help you explore it further?",
                 "I'd be happy to help with your notes. Could you tell me more about what you're working on?",
                 "I recommend creating a note about that to capture your thoughts!",
-                "I can help you generate ideas based on your notes. Would you like me to do that?",
+                "I can help you develop ideas based on your notes. Would you like me to do that?",
                 "That's a great point! Would you like me to create a note about it?"
             ];
             
@@ -851,7 +1065,7 @@
             // Create notification element
             const notification = document.createElement('div');
             notification.className = 'notification';
-            notification.textContent = message;
+            notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
             document.body.appendChild(notification);
             
             // Remove after animation completes
